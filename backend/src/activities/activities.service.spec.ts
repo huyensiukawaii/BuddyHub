@@ -73,10 +73,21 @@ describe('ActivitiesService', () => {
 
     expect(activity.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        startTime: new Date('2026-05-24 11:30'),
-        endTime: new Date('2026-05-24 13:00'),
+        startTime: new Date(2026, 4, 24, 11, 30),
+        endTime: new Date(2026, 4, 24, 13, 0),
       }),
     });
+  });
+
+  it('rejects invalid date and time field combinations', async () => {
+    await expect(
+      service.create('host-id', {
+        ...validDto,
+        startTime: undefined,
+        date: '2026-02-30',
+        start: '11:30',
+      }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('rejects end times before the activity start time', async () => {

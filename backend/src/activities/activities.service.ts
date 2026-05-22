@@ -74,7 +74,7 @@ export class ActivitiesService {
         throw error;
       }
 
-      throw new InternalServerErrorException({ message: 'error' });
+      throw new InternalServerErrorException('error');
     }
   }
 
@@ -161,7 +161,7 @@ export class ActivitiesService {
     const activityDate = this.getRequiredString(dto, ['date', 'activityDate']);
     const start = this.getRequiredString(dto, ['start', 'startHour']);
 
-    return this.parseDate(`${activityDate} ${start}`);
+    return this.parseDateAndTime(activityDate, start);
   }
 
   private getOptionalActivityEndTime(dto: CreateActivityDto) {
@@ -180,7 +180,7 @@ export class ActivitiesService {
       throw this.error();
     }
 
-    return this.parseDate(`${activityDate} ${end.trim()}`);
+    return this.parseDateAndTime(activityDate, end.trim());
   }
 
   private getDate(dto: CreateActivityDto, keys: Array<keyof CreateActivityDto>) {
@@ -202,6 +202,43 @@ export class ActivitiesService {
     }
 
     return parsed;
+  }
+
+  private parseDateAndTime(dateValue: string, timeValue: string) {
+    const dateMatch = dateValue
+      .trim()
+      .match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const timeMatch = timeValue
+      .trim()
+      .match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+
+    if (!dateMatch || !timeMatch) {
+      throw this.error();
+    }
+
+    const [, year, month, day] = dateMatch;
+    const [, hour, minute, second = '0'] = timeMatch;
+    const date = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second),
+    );
+
+    if (
+      date.getFullYear() !== Number(year) ||
+      date.getMonth() !== Number(month) - 1 ||
+      date.getDate() !== Number(day) ||
+      date.getHours() !== Number(hour) ||
+      date.getMinutes() !== Number(minute) ||
+      date.getSeconds() !== Number(second)
+    ) {
+      throw this.error();
+    }
+
+    return date;
   }
 
   private getPositiveInteger(
@@ -307,6 +344,6 @@ export class ActivitiesService {
   }
 
   private error() {
-    return new BadRequestException({ message: 'error' });
+    return new BadRequestException('error');
   }
 }

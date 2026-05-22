@@ -32,7 +32,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = this.extractBearerToken(request);
 
     if (!token) {
-      throw new UnauthorizedException({ message: 'error' });
+      throw new UnauthorizedException('Thiếu token xác thực');
     }
 
     try {
@@ -44,7 +44,7 @@ export class JwtAuthGuard implements CanActivate {
       request.user = { id: payload.sub, email: payload.email };
       return true;
     } catch {
-      throw new UnauthorizedException({ message: 'error' });
+      throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
     }
   }
 
@@ -52,8 +52,10 @@ export class JwtAuthGuard implements CanActivate {
     const authorization = request.headers.authorization;
     if (!authorization) return null;
 
-    const [type, token] = authorization.split(' ');
-    if (type !== 'Bearer' || !token) return null;
+    const [type, token, ...rest] = authorization.trim().split(/\s+/);
+    if (type?.toLowerCase() !== 'bearer' || !token || rest.length > 0) {
+      return null;
+    }
 
     return token;
   }
