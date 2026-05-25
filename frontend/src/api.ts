@@ -1,4 +1,5 @@
 import api from './lib/axios'
+import type { ActivityCategory } from './types/activity'
 
 type AuthLoginPayload = {
   email: string
@@ -21,7 +22,7 @@ type RegisterPayload = {
   gender: 'male' | 'female'
 }
 
-type ProfilePayload = {
+export type ProfilePayload = {
   name: string
   faculty?: string | null
   schoolYear?: number | null
@@ -78,5 +79,24 @@ export async function updateProfile(payload: ProfilePayload, options?: AuthHeade
 
 export async function getDashboard() {
   const response = await api.get('/users/me/dashboard')
+  return response.data
+}
+
+export type CreateActivityPayload = {
+  type: ActivityCategory
+  name: string
+  location: string
+  date: string
+  start: string
+  end?: string
+  maxPeople: number
+  purpose: string
+  deadline: string
+  groupChatLink: string
+  description?: string
+}
+
+export async function createActivity(payload: CreateActivityPayload) {
+  const response = await api.post('/activities', payload)
   return response.data
 }

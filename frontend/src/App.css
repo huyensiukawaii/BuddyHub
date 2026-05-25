@@ -5,6 +5,9 @@
   place-items: center;
   padding: 28px 20px 24px;
   overflow: hidden;
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .auth-orb {
