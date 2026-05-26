@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import AuthPage from './pages/AuthPage'
+import CreateActivityPage from './pages/CreateActivityPage'
 import ProfilePage from './pages/ProfilePage'
 
 function App() {
@@ -24,6 +25,10 @@ function App() {
 
   if (pathname === '/me') {
     return <ProfilePage />
+  }
+
+  if (pathname === '/activities/new') {
+    return <CreateActivityPage />
   }
 
   return <AuthPage />

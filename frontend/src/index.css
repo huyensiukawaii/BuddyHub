@@ -5,8 +5,8 @@
   --border: #ece2d7;
   --shadow:
     0 25px 70px rgba(49, 31, 18, 0.08), 0 2px 10px rgba(49, 31, 18, 0.04);
-  --sans: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --heading: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --sans: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --heading: Inter, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --mono: 'SFMono-Regular', Menlo, Consolas, monospace;
 
   font: 16px/1.5 var(--sans);

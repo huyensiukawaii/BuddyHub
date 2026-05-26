@@ -6,7 +6,7 @@
   max-width: 1180px;
   margin: 0 auto;
   padding: 24px 20px 40px;
-  font-family: Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--sans);
   color: #2f3138;
 }
 
@@ -482,6 +482,23 @@
   border: 1px solid #efe0d0;
   background: #fff;
   box-shadow: 0 8px 22px rgba(136, 96, 55, 0.06);
+}
+
+.action-card-button {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.action-card-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(22, 166, 162, 0.45);
+  box-shadow: 0 12px 28px rgba(22, 166, 162, 0.12);
 }
 
 .action-card strong {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getDashboard, updateProfile } from '../api'
+import { getDashboard, updateProfile, type ProfilePayload } from '../api'
+import { navigate } from '../lib/navigation'
 import './ProfilePage.css'
 
 type DashboardActivity = {
@@ -165,7 +166,7 @@ export default function ProfilePage() {
       setSaving(true)
       setSaveError(null)
 
-      const payload: Record<string, unknown> = {
+      const payload: ProfilePayload = {
         name: draft.name.trim(),
         faculty: draft.faculty.trim() || null,
         schoolYear: draft.schoolYear.trim() ? Number(draft.schoolYear) : null,
@@ -387,13 +388,13 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="action-card">
+        <button type="button" className="action-card action-card-button" onClick={() => navigate('/activities/new')}>
           <div className="action-card-icon action-card-icon-teal">＋</div>
           <div>
             <strong>Tạo hoạt động</strong>
             <span>Mời bạn bè cùng tham gia</span>
           </div>
-        </div>
+        </button>
       </section>
     </main>
   )
