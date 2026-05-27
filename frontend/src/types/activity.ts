@@ -63,6 +63,8 @@ export type ActivityParticipant = {
   name: string
 }
 
+export type ActivityStatus = 'OPEN' | 'FULL' | 'CLOSED' | 'CANCELLED' | 'FINISHED'
+
 export type ActivityDetail = {
   id: string
   title: string
@@ -75,6 +77,8 @@ export type ActivityDetail = {
   maxSlots: number
   currentParticipants: number
   gender?: ActivityGender
+  status?: ActivityStatus
+  chatLink?: string | null
   description?: string | null
   imageUrl?: string | null
   host?: ActivityHost
