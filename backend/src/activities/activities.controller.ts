@@ -8,8 +8,15 @@ import {
   Post,
   Query,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ACTIVITY_IMAGE_MAX_BYTES,
+  type UploadableImageFile,
+} from '../cloudinary/cloudinary.service';
 import type { AuthenticatedRequest } from '../common/guards/jwt-auth.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ActivitiesService } from './activities.service';
@@ -41,10 +48,36 @@ export class ActivitiesController {
     return this.activitiesService.findOne(id);
   }
 
+  // POST /api/activities/:id/join
+  @Post(':id/join')
+  @UseGuards(JwtAuthGuard)
+  join(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+        exceptionFactory: () => new BadRequestException('ID hoạt động không hợp lệ'),
+      }),
+    )
+    id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.activitiesService.join(id, req.user.id);
+  }
+
   // POST /api/activities
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Req() req: AuthenticatedRequest, @Body() dto: CreateActivityDto) {
-    return this.activitiesService.create(req.user.id, dto);
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: { fileSize: ACTIVITY_IMAGE_MAX_BYTES },
+    }),
+  )
+  create(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateActivityDto,
+    @UploadedFile() image?: UploadableImageFile,
+  ) {
+    return this.activitiesService.create(req.user.id, dto, image);
   }
 }

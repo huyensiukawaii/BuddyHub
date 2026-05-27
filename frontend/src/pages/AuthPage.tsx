@@ -7,6 +7,7 @@ import {
   updateProfile,
   verifyOtp,
   type ProfilePayload,
+  type ProfilePayload,
 } from '../api'
 import { getApiErrorMessage } from '../lib/errors'
 import '../App.css'
@@ -561,8 +562,24 @@ export default function AuthPage() {
         safeInterests = completeProfileForm.interests.filter((it) => interestOptions.includes(it))
       }
 
-      if (safeInterests.length > 0) {
-        payload.interests = safeInterests
+      const safePayload: ProfilePayload = { name: safeName }
+      if (safeFaculty !== null) safePayload.faculty = safeFaculty
+      if (safeSchoolYear !== null) safePayload.schoolYear = safeSchoolYear
+      safePayload.bio = safeBio
+      if (safeInterests.length > 0) safePayload.interests = safeInterests
+
+      // final debug log for browser console
+      // eslint-disable-next-line no-console
+      console.debug('[ProfileSubmit] safePayload:', safePayload, 'using token:', Boolean(storedToken))
+
+      // Verify token and current user before attempting profile update to avoid backend errors
+      const meData = await getMe({ token: storedToken })
+      const currentUserId = meData?.id
+      // eslint-disable-next-line no-console
+      console.debug('[ProfileSubmit] /users/me response id:', currentUserId)
+
+      if (!currentUserId) {
+        throw new Error('Token không hợp lệ hoặc server không trả về thông tin người dùng. Vui lòng đăng nhập lại.')
       }
 
       await updateProfile(payload, { token: accessToken })
