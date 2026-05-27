@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getPublicProfile } from "../api";
 import { AppNav } from "../components/layout/AppNav";
+import { navigate } from "../lib/navigation";
 import "./ProfilePage.css";
 
 type PublicProfileResponse = {
@@ -25,6 +26,15 @@ function formatGender(value?: "MALE" | "FEMALE" | "ALL" | null) {
   return "Chưa cập nhật";
 }
 
+function makeHandle(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/(^\.|\.$)/g, "");
+}
+
 export default function UserProfilePage({ userId }: { userId: string }) {
   const [data, setData] = useState<PublicProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +42,7 @@ export default function UserProfilePage({ userId }: { userId: string }) {
 
   useEffect(() => {
     let alive = true;
+
     const load = async () => {
       try {
         setLoading(true);
@@ -40,13 +51,14 @@ export default function UserProfilePage({ userId }: { userId: string }) {
         if (!alive) return;
         setData(res);
       } catch (e: any) {
+        if (!alive) return;
         setError(
           e?.response?.data?.message ||
             e?.message ||
             "Lỗi khi tải hồ sơ người dùng",
         );
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
 
@@ -56,58 +68,82 @@ export default function UserProfilePage({ userId }: { userId: string }) {
     };
   }, [userId]);
 
-  if (loading) return <div className="myprofile-shell">Đang tải hồ sơ…</div>;
-  if (error) return <div className="myprofile-shell">Lỗi: {error}</div>;
-  if (!data) return <div className="myprofile-shell">Không có hồ sơ</div>;
+  if (loading) {
+    return (
+      <main className="myprofile-shell public-profile-shell">
+        <AppNav active="profile" />
+        <div className="public-profile-state">Đang tải hồ sơ...</div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="myprofile-shell public-profile-shell">
+        <AppNav active="profile" />
+        <button type="button" className="profile-back" onClick={() => window.history.back()}>
+          ← Quay lại
+        </button>
+        <div className="public-profile-state public-profile-state-error">Lỗi: {error}</div>
+      </main>
+    );
+  }
+
+  if (!data) {
+    return (
+      <main className="myprofile-shell public-profile-shell">
+        <AppNav active="profile" />
+        <div className="public-profile-state">Không có hồ sơ</div>
+      </main>
+    );
+  }
 
   const profile = data.profile;
-  const initial =
-    (profile.name && profile.name.trim().charAt(0).toUpperCase()) || "?";
+  const initial = profile.name.trim().charAt(0).toUpperCase() || "?";
   const genderLabel = formatGender(profile.gender);
+  const handle = makeHandle(profile.name);
 
   return (
-    <main className="myprofile-shell">
+    <main className="myprofile-shell public-profile-shell">
       <AppNav active="profile" />
 
-      <button
-        type="button"
-        className="profile-back"
-        onClick={() => window.history.back()}
-      >
+      <button type="button" className="profile-back" onClick={() => window.history.back()}>
         ← Quay lại
       </button>
 
-      <section className="myprofile-card myprofile-hero">
-        <div className="myprofile-cover" />
-        <div className="myprofile-header">
-          <div className="avatar" aria-hidden>
+      <section className="myprofile-card public-profile-card">
+        <div className="public-profile-cover" />
+
+        <div className="public-profile-header">
+          <div className="public-profile-avatar" aria-hidden>
             {profile.avatarUrl ? (
-              <img src={profile.avatarUrl} alt="avatar" />
+              <img src={profile.avatarUrl} alt="" />
             ) : (
-              <div className="avatar-placeholder">{initial}</div>
+              <div className="public-profile-avatar-placeholder">{initial}</div>
             )}
+            <span className="public-profile-presence" />
           </div>
 
-          <div className="meta">
-            <div className="name-row">
+          <div className="public-profile-meta">
+            <div className="public-profile-name-row">
               <h1>{profile.name}</h1>
+              {handle && <span className="handle">@{handle}</span>}
             </div>
-            <div className="sub">
-              {profile.isVerified && (
-                <span className="badge">HUST Verified</span>
-              )}
+
+            <div className="public-profile-sub">
+              {profile.isVerified && <span className="badge">HUST Verified</span>}
+              <span className="public-profile-visibility">Hồ sơ công khai</span>
             </div>
+
             <div className="meta-line">
               {profile.faculty || "Chưa cập nhật khoa / viện"}
               {profile.schoolYear ? ` · Năm ${profile.schoolYear}` : ""}
             </div>
             <div className="meta-line">Giới tính: {genderLabel}</div>
           </div>
-
-          <div className="action">{/* public profile: no edit button */}</div>
         </div>
 
-        <p className="bio">{profile.bio || "Chưa có phần giới thiệu."}</p>
+        <p className="public-profile-bio">{profile.bio || "Chưa có phần giới thiệu."}</p>
 
         <div className="counts">
           <div className="count">
@@ -120,21 +156,50 @@ export default function UserProfilePage({ userId }: { userId: string }) {
           </div>
         </div>
 
-        <div className="interests">
-          <div className="section-head">
-            <h3>Sở thích</h3>
+        <div className="public-profile-content-grid">
+          <div className="interests public-profile-section">
+            <div className="section-head">
+              <h3>Sở thích</h3>
+            </div>
+            <div className="chips">
+              {profile.interests.length === 0 ? (
+                <span className="muted">Chưa cập nhật</span>
+              ) : (
+                profile.interests.map((interest) => (
+                  <span key={interest} className="chip">
+                    {interest}
+                  </span>
+                ))
+              )}
+            </div>
           </div>
-          <div className="chips">
-            {profile.interests.length === 0 ? (
-              <span className="muted">Chưa cập nhật</span>
-            ) : (
-              profile.interests.map((interest) => (
-                <span key={interest} className="chip">
-                  {interest}
-                </span>
-              ))
-            )}
+
+          <div className="public-profile-section public-profile-info">
+            <h3>Thông tin</h3>
+            <div className="public-profile-info-list">
+              <div>
+                <span>Khoa / Viện</span>
+                <strong>{profile.faculty || "Chưa cập nhật"}</strong>
+              </div>
+              <div>
+                <span>Năm học</span>
+                <strong>{profile.schoolYear ? `Năm ${profile.schoolYear}` : "Chưa cập nhật"}</strong>
+              </div>
+              <div>
+                <span>Giới tính</span>
+                <strong>{genderLabel}</strong>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div className="public-profile-actions">
+          <button type="button" className="cancel-button" onClick={() => window.history.back()}>
+            Quay lại hoạt động
+          </button>
+          <button type="button" className="save-button" onClick={() => navigate("/activities")}>
+            Khám phá hoạt động
+          </button>
         </div>
       </section>
     </main>
