@@ -17,11 +17,12 @@ export type CompleteProfileForm = {
   name: string
   password: string
   confirmPassword: string
-  gender: 'male' | 'female' | ''
+  gender: 'male' | 'female' | 'other' | ''
   faculty: string
   schoolYear: string
   interests: string[]
   bio: string
+  avatarUrl?: string | null
 }
 
 export type ProfileForm = {

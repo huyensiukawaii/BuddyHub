@@ -54,7 +54,9 @@
 }
 
 .auth-page-login .brand-bar,
-.auth-page-register .brand-bar {
+.auth-page-register .brand-bar,
+.auth-page-verify .brand-bar,
+.auth-page-profile .brand-bar {
   position: fixed;
   top: 20px;
   left: 50%;
@@ -64,7 +66,9 @@
 }
 
 .auth-page-login .auth-frame,
-.auth-page-register .auth-frame {
+.auth-page-register .auth-frame,
+.auth-page-verify .auth-frame,
+.auth-page-profile .auth-frame {
   padding-top: 88px;
 }
 
@@ -263,6 +267,57 @@
     transform 0.16s ease;
 }
 
+/* Small avatar used in auth profile form */
+.avatar.upload-label {
+  width: 88px;
+  height: 88px;
+  border-radius: 16px;
+  border: 4px solid #fff;
+  background: #f3f4f6;
+  box-shadow: 0 8px 20px rgba(28, 29, 32, 0.08);
+  overflow: hidden;
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.avatar.upload-label img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar.upload-label .avatar-placeholder {
+  font-size: 28px;
+  font-weight: 800;
+  color: #59483f;
+}
+
+.avatar.upload-label:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(28, 29, 32, 0.12);
+}
+
+.avatar.upload-label .avatar-edit {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: #59483f; /* match avatar placeholder text color */
+  box-shadow: none;
+}
+
+.avatar.upload-label .avatar-edit svg {
+  width: 14px;
+  height: 14px;
+}
+
 
 .password-row {
   position: relative;
@@ -297,6 +352,49 @@
 .eye-icon {
   width: 18px;
   height: 18px;
+}
+
+/* Ensure SVG strokes use currentColor and are consistently sized/aligned */
+.eye-icon svg,
+.eye-icon path,
+.eye-icon circle,
+.eye-icon line {
+  stroke: currentColor !important;
+  fill: none !important;
+}
+
+.password-toggle:hover .eye-icon {
+  color: #de5e24;
+}
+
+.password-hints {
+  margin-top: 6px;
+  display: grid;
+  gap: 4px;
+  font-size: 0.86rem;
+  color: #6b6b6b;
+}
+.password-hints .hint-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.password-hints .hint-item.good {
+  color: #197a3c;
+}
+.password-hints .hint-item.bad {
+  color: #b33a2a;
+}
+
+.confirm-hint {
+  margin-top: 6px;
+  font-size: 0.95rem;
+}
+.confirm-hint.good {
+  color: #197a3c;
+}
+.confirm-hint.bad {
+  color: #b33a2a;
 }
 
 .field textarea {
@@ -640,31 +738,37 @@
   font-size: 0.9rem;
 }
 
+
 .otp-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 6px;
+  /* columns are fractional and scale with container width; inputs capped by max-width */
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: calc(6 * 72px + 5 * 10px); /* when large, inputs cap at 72px each */
+  margin: 0 auto;
 }
 
 .otp-input {
-  height: 40px;
-  border-radius: 10px;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: 72px;
+  min-width: 40px;
+  border-radius: 12px;
   border: 1px solid #e5ddd4;
   text-align: center;
   font: inherit;
-  font-size: 0.98rem;
+  font-size: 1rem;
+  font-weight: 600;
   color: #2d2732;
   outline: none;
   background: #fff;
-  transition:
-    border-color 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.16s ease;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 
 .otp-input:focus {
   border-color: rgba(240, 123, 44, 0.64);
-  box-shadow: 0 0 0 4px rgba(240, 123, 44, 0.12);
+  box-shadow: 0 0 0 6px rgba(240, 123, 44, 0.12);
   transform: translateY(-1px);
 }
 
@@ -780,14 +884,16 @@
   align-items: center;
   gap: 0;
   margin-bottom: 32px;
-  padding: 0 16px;
+  padding: 0 30px; /* match .auth-card horizontal padding so indicator aligns with card content */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .step-indicator-track {
   position: absolute;
   top: 50%;
-  left: 16px;
-  right: 16px;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
   gap: 0;
@@ -811,8 +917,11 @@
   display: flex;
   justify-content: space-between;
   width: 100%;
-  max-width: 320px;
+  max-width: 100%;
   gap: 32px;
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .step-indicator-item {
@@ -824,8 +933,8 @@
 }
 
 .step-indicator-circle {
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -880,11 +989,11 @@ fieldset:last-of-type {
 .fieldset-legend {
   font-weight: 700;
   font-size: 0.85rem;
-  color: #2d2a33;
+  color: #ed742d;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 0 0 8px 0;
-  border-bottom: 2px solid #e6ddd3;
+  border-bottom: 2px solid #ed742d;
   margin-bottom: 12px;
 }
 
@@ -1006,13 +1115,17 @@ fieldset:last-of-type {
   }
 
   .auth-page-login .brand-bar,
-  .auth-page-register .brand-bar {
+  .auth-page-register .brand-bar,
+  .auth-page-verify .brand-bar,
+  .auth-page-profile .brand-bar {
     top: 16px;
     width: min(calc(100% - 28px), 1120px);
   }
 
   .auth-page-login .auth-frame,
-  .auth-page-register .auth-frame {
+  .auth-page-register .auth-frame,
+  .auth-page-verify .auth-frame,
+  .auth-page-profile .auth-frame {
     padding-top: 78px;
   }
 
@@ -1049,9 +1162,70 @@ fieldset:last-of-type {
   }
 
   .otp-grid {
+    grid-template-columns: repeat(6, minmax(40px, 1fr));
     gap: 6px;
   }
 
+  .otp-input {
+    height: 48px;
+    font-size: 0.98rem;
+  }
+
+
+@media (max-width: 420px) {
+  .step-indicator {
+    margin-bottom: 20px;
+    padding: 0 8px;
+  }
+
+  .step-indicator-track {
+    left: 8px;
+    right: 8px;
+    top: 52%;
+  }
+
+  .step-indicator-items {
+    max-width: 300px;
+    gap: 12px;
+  }
+
+  .step-indicator-circle {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  .step-indicator-item {
+    gap: 8px;
+  }
+
+  .otp-grid {
+    grid-template-columns: repeat(6, 48px);
+    justify-content: center;
+    justify-items: center;
+    gap: 8px;
+  }
+
+  .otp-input {
+    height: 56px;
+    min-width: 48px;
+    font-size: 1.02rem;
+    border-radius: 12px;
+  }
+
+  .inline-actions {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .auth-frame {
+    padding-top: 68px;
+  }
+
+  .flow-wrap {
+    width: calc(100% - 36px);
+  }
+}
   .otp-input {
     height: 44px;
     border-radius: 12px;

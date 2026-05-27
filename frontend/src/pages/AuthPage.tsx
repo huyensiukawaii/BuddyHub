@@ -208,6 +208,28 @@ export default function AuthPage() {
     }
   }, [screen, pathname])
 
+  // Enforce auth step sequence: cannot visit verify/profile without prior steps completed
+  useEffect(() => {
+    try {
+      if (screen === 'verify') {
+        if (!pendingRegistration?.email) {
+          setBanner({ tone: 'error', text: 'Vui lòng bắt đầu đăng ký trước.' })
+          setScreen('register')
+        }
+      }
+
+      if (screen === 'profile') {
+        // require that OTP was verified and tempToken exists
+        if (!pendingRegistration?.tempToken) {
+          setBanner({ tone: 'error', text: 'Vui lòng xác thực email trước khi hoàn tất hồ sơ.' })
+          setScreen('verify')
+        }
+      }
+    } catch {
+      return
+    }
+  }, [screen, pendingRegistration])
+
   useEffect(() => {
     const onPop = () => {
       try {
@@ -261,13 +283,13 @@ export default function AuthPage() {
 
     const nextErrors: FieldErrors<keyof LoginForm> = {}
     if (!loginForm.email.trim()) {
-      nextErrors.email = 'Vui lÃ²ng nháº­p email HUST'
+      nextErrors.email = 'Vui lòng nhập email HUST'
     } else if (!isHustEmail(loginForm.email)) {
-      nextErrors.email = 'Email HUST khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng'
+      nextErrors.email = 'Email HUST không đúng định dạng'
     }
 
     if (!loginForm.password.trim()) {
-      nextErrors.password = 'Vui lÃ²ng nháº­p máº­t kháº©u'
+      nextErrors.password = 'Vui lòng nhập mật khẩu'
     }
 
     setLoginErrors(nextErrors)
@@ -289,13 +311,13 @@ export default function AuthPage() {
         setAccessToken(accessToken)
       }
 
-      setBanner({ tone: 'success', text: 'ÄÄƒng nháº­p thÃ nh cÃ´ng. Chuyá»ƒn tá»›i trang há»“ sÆ¡â€¦' })
+      setBanner({ tone: 'success', text: 'Đăng nhập thành công. Chuyển tới trang hồ sơ…' })
       window.history.pushState(null, '', '/me')
       setPathname('/me')
       window.dispatchEvent(new PopStateEvent('popstate'))
       return
     } catch (error) {
-      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'ÄÄƒng nháº­p tháº¥t báº¡i') })
+      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Đăng nhập thất bại') })
     } finally {
       setLoginLoading(false)
     }
@@ -308,9 +330,9 @@ export default function AuthPage() {
     const nextErrors: FieldErrors<'email'> = {}
 
     if (!registerForm.email.trim()) {
-      nextErrors.email = 'Vui lÃ²ng nháº­p email HUST'
+      nextErrors.email = 'Vui lòng nhập email HUST'
     } else if (!isHustEmail(registerForm.email)) {
-      nextErrors.email = 'Email HUST khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng'
+      nextErrors.email = 'Email HUST không đúng định dạng'
     }
 
     setRegisterErrors(nextErrors)
@@ -338,14 +360,14 @@ export default function AuthPage() {
       setOtpDigits(Array.from({ length: otpLength }, () => ''))
       setCompleteProfileForm(completeProfileDefaults)
       setCompleteProfileErrors({})
-      setBanner({ tone: 'success', text: 'ÄÃ£ gá»­i mÃ£ xÃ¡c thá»±c Ä‘áº¿n email HUST cá»§a báº¡n.' })
+      setBanner({ tone: 'success', text: 'Đã gửi mã xác thực đến email HUST của bạn.' })
       setScreen('verify')
     } catch (error) {
       const apiMessages = getApiMessages(error)
       if (apiMessages.length > 0) {
         setRegisterErrors({ email: apiMessages[0] })
       } else {
-        setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Gá»­i mÃ£ xÃ¡c thá»±c tháº¥t báº¡i') })
+        setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Gửi mã xác thực thất bại') })
       }
     } finally {
       setRegisterLoading(false)
@@ -401,12 +423,12 @@ export default function AuthPage() {
 
     const otpValue = otpDigits.join('')
     if (otpValue.length !== otpLength) {
-      setBanner({ tone: 'error', text: 'OTP pháº£i Ä‘Ãºng 6 chá»¯ sá»‘' })
+      setBanner({ tone: 'error', text: 'OTP phải đúng 6 chữ số' })
       return
     }
 
     if (!pendingRegistration) {
-      setBanner({ tone: 'error', text: 'Thiáº¿u thÃ´ng tin Ä‘Äƒng kÃ½. Vui lÃ²ng quay láº¡i mÃ n hÃ¬nh Ä‘Äƒng kÃ½.' })
+      setBanner({ tone: 'error', text: 'Thiếu thông tin đăng ký. Vui lòng quay lại màn hình đăng ký.' })
       return
     }
 
@@ -423,7 +445,7 @@ export default function AuthPage() {
       const prefill = data?.prefill ?? {}
 
       if (typeof tempToken !== 'string' || !tempToken.trim()) {
-        throw new Error('KhÃ´ng nháº­n Ä‘Æ°á»£c tempToken tá»« mÃ¡y chá»§')
+        throw new Error('Không nhận được tempToken từ máy chủ')
       }
 
       setPendingRegistration((current) => {
@@ -444,16 +466,46 @@ export default function AuthPage() {
       })
 
       // Move to complete profile screen - do not create account yet
-      setCompleteProfileForm((current) => ({
-        ...current,
-        name: typeof prefill.firstName === 'string' ? prefill.firstName : '',
-        schoolYear: typeof prefill.schoolYear === 'number' ? String(prefill.schoolYear) : '',
-      }))
+      setCompleteProfileForm((current) => {
+        const next = { ...current }
+        next.name = typeof prefill.firstName === 'string' ? prefill.firstName : ''
+
+        // determine school year: prefer server prefill, else try to infer from studentId or email
+        if (typeof prefill.schoolYear === 'number') {
+          next.schoolYear = String(prefill.schoolYear)
+        } else {
+          let inferred: number | null = null
+          const sid = typeof prefill.studentId === 'string' ? prefill.studentId.trim() : ''
+          // if studentId begins with 4-digit year
+          const sidMatch = sid.match(/^(20\d{2})/) // e.g. 2022xxxx
+          if (sidMatch) {
+            const admit = Number(sidMatch[1])
+            const now = new Date().getFullYear()
+            const year = now - admit + 1
+            if (year >= 1 && year <= 10) inferred = year
+          }
+
+          // fallback: try to find 4-digit year in email
+          if (inferred === null) {
+            const emailYearMatch = pendingRegistration?.email?.match(/20\d{2}/)
+            if (emailYearMatch) {
+              const admit = Number(emailYearMatch[0])
+              const now = new Date().getFullYear()
+              const year = now - admit + 1
+              if (year >= 1 && year <= 10) inferred = year
+            }
+          }
+
+          next.schoolYear = inferred ? String(inferred) : ''
+        }
+
+        return next
+      })
       setCompleteProfileErrors({})
-      setBanner({ tone: 'success', text: 'Email xÃ¡c thá»±c thÃ nh cÃ´ng. Vui lÃ²ng hoÃ n thiá»‡n há»“ sÆ¡.' })
+      setBanner({ tone: 'success', text: 'Email xác thực thành công. Vui lòng hoàn thiện hồ sơ.' })
       setScreen('profile')
     } catch (error) {
-      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'XÃ¡c thá»±c OTP tháº¥t báº¡i') })
+      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Xác thực OTP thất bại') })
     } finally {
       setVerifyLoading(false)
     }
@@ -461,7 +513,7 @@ export default function AuthPage() {
 
   const handleResendOtp = async () => {
     if (!pendingRegistration) {
-      setBanner({ tone: 'error', text: 'Thiáº¿u email Ä‘Äƒng kÃ½. Vui lÃ²ng quay láº¡i mÃ n Ä‘Äƒng kÃ½.' })
+      setBanner({ tone: 'error', text: 'Thiếu email đăng ký. Vui lòng quay lại màn đăng ký.' })
       return
     }
 
@@ -471,10 +523,10 @@ export default function AuthPage() {
     try {
       await sendOtp({ email: pendingRegistration.email })
       setOtpDigits(Array.from({ length: otpLength }, () => ''))
-      setBanner({ tone: 'success', text: 'ÄÃ£ gá»­i láº¡i mÃ£ xÃ¡c thá»±c má»›i.' })
+      setBanner({ tone: 'success', text: 'Đã gửi lại mã xác thực mới.' })
       otpInputRefs.current[0]?.focus()
     } catch (error) {
-      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Gá»­i láº¡i mÃ£ tháº¥t báº¡i') })
+      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Gửi lại mã thất bại') })
     } finally {
       setResendLoading(false)
     }
@@ -497,39 +549,39 @@ export default function AuthPage() {
 
     const nextErrors: FieldErrors<keyof CompleteProfileForm> = {}
 
-    // TÃªn Ä‘Æ°á»£c auto-fill tá»« HUST, khÃ´ng validate
+    // Tên được auto-fill từ HUST, không validate
     // const name_valid = completeProfileForm.name.trim()
-    // if (!name_valid) nextErrors.name = 'Vui lÃ²ng nháº­p tÃªn'
+    // if (!name_valid) nextErrors.name = 'Vui lòng nhập tên'
 
     if (!completeProfileForm.password.trim()) {
-      nextErrors.password = 'Vui lÃ²ng nháº­p máº­t kháº©u'
+      nextErrors.password = 'Vui lòng nhập mật khẩu'
     } else if (completeProfileForm.password.length < 8) {
-      nextErrors.password = 'Máº­t kháº©u pháº£i cÃ³ Ã­t nháº¥t 8 kÃ½ tá»±'
+      nextErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự'
     } else if (!passwordPolicyRegex.test(completeProfileForm.password)) {
-      nextErrors.password = 'Máº­t kháº©u pháº£i cÃ³ Ã­t nháº¥t 1 chá»¯ hoa vÃ  1 chá»¯ sá»‘'
+      nextErrors.password = 'Mật khẩu phải có ít nhất 1 chữ hoa và 1 chữ số'
     }
 
     if (!completeProfileForm.confirmPassword.trim()) {
-      nextErrors.confirmPassword = 'Vui lÃ²ng nháº­p láº¡i máº­t kháº©u'
+      nextErrors.confirmPassword = 'Vui lòng nhập lại mật khẩu'
     } else if (completeProfileForm.confirmPassword !== completeProfileForm.password) {
-      nextErrors.confirmPassword = 'Máº­t kháº©u nháº­p láº¡i khÃ´ng khá»›p'
+      nextErrors.confirmPassword = 'Mật khẩu nhập lại không khớp'
     }
 
     if (!completeProfileForm.gender) {
-      nextErrors.gender = 'Vui lÃ²ng chá»n giá»›i tÃ­nh'
+      nextErrors.gender = 'Vui lòng chọn giới tính'
     }
 
     // Validate profile fields
     if (!completeProfileForm.faculty.trim()) {
-      nextErrors.faculty = 'Vui lÃ²ng chá»n khoa / viá»‡n'
+      nextErrors.faculty = 'Vui lòng chọn khoa / viện'
     }
 
     if (!completeProfileForm.schoolYear.trim()) {
-      nextErrors.schoolYear = 'Vui lÃ²ng chá»n nÄƒm há»c'
+      nextErrors.schoolYear = 'Vui lòng chọn năm học'
     }
 
     if (completeProfileForm.bio.trim().length > 200) {
-      nextErrors.bio = 'Giá»›i thiá»‡u khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ 200 kÃ½ tá»±'
+      nextErrors.bio = 'Giới thiệu không được vượt quá 200 ký tự'
     }
 
     setCompleteProfileErrors(nextErrors)
@@ -538,7 +590,7 @@ export default function AuthPage() {
     }
 
     if (!pendingRegistration) {
-      setBanner({ tone: 'error', text: 'Thiáº¿u thÃ´ng tin Ä‘Äƒng kÃ½. Vui lÃ²ng lÃ m láº¡i luá»“ng OTP.' })
+      setBanner({ tone: 'error', text: 'Thiếu thông tin đăng ký. Vui lòng làm lại luồng OTP.' })
       return
     }
 
@@ -556,7 +608,7 @@ export default function AuthPage() {
 
       const accessToken = registerData?.accessToken
       if (typeof accessToken !== 'string' || !accessToken.trim()) {
-        throw new Error('KhÃ´ng nháº­n Ä‘Æ°á»£c accessToken tá»« mÃ¡y chá»§')
+        throw new Error('Không nhận được accessToken từ máy chủ')
       }
 
       // Step 2: Update profile with additional information
@@ -592,13 +644,13 @@ export default function AuthPage() {
       setLoginForm(loginDefaults)
       setOtpDigits(Array.from({ length: otpLength }, () => ''))
       setCompleteProfileForm(completeProfileDefaults)
-      setBanner({ tone: 'success', text: 'ÄÄƒng kÃ½ thÃ nh cÃ´ng! Vui lÃ²ng Ä‘Äƒng nháº­p.' })
+      setBanner({ tone: 'success', text: 'Đăng ký thành công! Vui lòng đăng nhập.' })
       window.history.pushState(null, '', homePath)
       setPathname(homePath)
       window.dispatchEvent(new PopStateEvent('popstate'))
       return
     } catch (error) {
-      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'HoÃ n táº¥t Ä‘Äƒng kÃ½ tháº¥t báº¡i') })
+      setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Hoàn tất đăng ký thất bại') })
     } finally {
       setProfileLoading(false)
     }

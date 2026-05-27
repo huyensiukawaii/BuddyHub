@@ -31,8 +31,8 @@ export function RegisterScreen({
       </div>
 
       <div className="card-title-block">
-        <h1>ÄÄƒng kÃ½ tÃ i khoáº£n</h1>
-        <p>BÆ°á»›c 1: Nháº­p email Ä‘á»ƒ xÃ¡c thá»±c</p>
+        <h1>Đăng ký tài khoản</h1>
+        <p>Bước 1: Nhập email để xác thực</p>
       </div>
 
       {banner && (
@@ -52,18 +52,18 @@ export function RegisterScreen({
             aria-invalid={Boolean(errors.email)}
             autoFocus
           />
-          <small className="field-hint">Chá»‰ cháº¥p nháº­n email cÃ³ Ä‘uÃ´i @sis.hust.edu.vn</small>
+          <small className="field-hint">Chỉ chấp nhận email có đuôi @sis.hust.edu.vn</small>
           {errors.email && <small className="field-error">{errors.email}</small>}
         </label>
 
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? <ButtonSpinner label="Đang gửi mã..." /> : 'Gá»­i mÃ£ xÃ¡c thá»±c'}
+          {loading ? <ButtonSpinner label="Đang gửi mã..." /> : 'Gửi mã xác thực'}
         </button>
 
         <p className="auth-switch">
-          <span>Báº¡n Ä‘Ã£ cÃ³ tÃ i khoáº£n? </span>
+          <span>Bạn đã có tài khoản? </span>
           <button className="text-link-button" type="button" onClick={onGoLogin}>
-            ÄÄƒng nháº­p
+            Đăng nhập
           </button>
         </p>
       </form>

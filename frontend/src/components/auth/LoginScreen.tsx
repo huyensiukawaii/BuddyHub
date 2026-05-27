@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { ButtonSpinner } from '../common/LoadingState'
 import type { Banner, FieldErrors, LoginForm } from '../../types/auth'
 import { EyeIcon, EyeOffIcon, MailIcon } from './icons'
@@ -31,8 +31,8 @@ export function LoginScreen({
       </div>
 
       <div className="card-title-block">
-        <h1>ÄÄƒng nháº­p</h1>
-        <p>Nháº­p email HUST vÃ  máº­t kháº©u Ä‘á»ƒ tiáº¿p tá»¥c.</p>
+        <h1>Đăng nhập</h1>
+        <p>Nhập email HUST và mật khẩu để tiếp tục.</p>
       </div>
 
       {banner && (
@@ -55,13 +55,13 @@ export function LoginScreen({
         </label>
 
         <label className="field">
-          <span>Máº­t kháº©u</span>
+          <span>Mật khẩu</span>
           <div className="password-row">
             <input
               type={showPassword ? 'text' : 'password'}
               value={form.password}
               onChange={(event) => onChange('password', event.target.value)}
-              placeholder="Nháº­p máº­t kháº©u"
+              placeholder="Nhập mật khẩu"
               aria-invalid={Boolean(errors.password)}
             />
             <button
@@ -69,7 +69,7 @@ export function LoginScreen({
               className="password-toggle"
               aria-pressed={showPassword}
               onClick={() => setShowPassword((value) => !value)}
-              aria-label={showPassword ? 'áº¨n máº­t kháº©u' : 'Hiá»‡n máº­t kháº©u'}
+              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
             >
               {showPassword ? <EyeOffIcon className="eye-icon" /> : <EyeIcon className="eye-icon" />}
             </button>
@@ -78,13 +78,13 @@ export function LoginScreen({
         </label>
 
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? <ButtonSpinner label="Đang đăng nhập..." /> : 'ÄÄƒng nháº­p'}
+          {loading ? <ButtonSpinner label="Đang đăng nhập..." /> : 'Đăng nhập'}
         </button>
 
         <p className="auth-switch">
-          <span>ChÆ°a cÃ³ tÃ i khoáº£n? </span>
+          <span>Chưa có tài khoản? </span>
           <button className="text-link-button" type="button" onClick={onGoRegister}>
-            ÄÄƒng kÃ½ ngay
+            Đăng ký ngay
           </button>
         </p>
       </form>

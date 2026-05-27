@@ -43,15 +43,15 @@ export function VerifyScreen({
       </div>
 
       <div className="card-title-block">
-        <h1>Nháº­p mÃ£ xÃ¡c thá»±c</h1>
+        <h1>Nhập mã xác thực</h1>
         <p>
-          BÆ°á»›c 2: MÃ£ 6 chá»¯ sá»‘ Ä‘Ã£ Ä‘Æ°á»£c gá»­i Ä‘áº¿n <strong>{email || 'email HUST cá»§a báº¡n'}</strong>
+          Bước 2: Mã 6 chữ số đã được gửi đến <strong>{email || 'email HUST của bạn'}</strong>
         </p>
       </div>
 
       {studentId ? (
         <div className="session-card">
-          <span>Sá»‘ sinh viÃªn</span>
+          <span>Số sinh viên</span>
           <strong>{studentId}</strong>
         </div>
       ) : null}
@@ -71,21 +71,21 @@ export function VerifyScreen({
               value={digit}
               onChange={(event) => onOtpDigitChange(index, event.target.value)}
               onKeyDown={(event) => onOtpKeyDown(index, event)}
-              aria-label={`OTP sá»‘ ${index + 1}`}
+              aria-label={`OTP số ${index + 1}`}
             />
           ))}
         </div>
 
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? <ButtonSpinner label="Đang xác thực..." /> : 'XÃ¡c nháº­n'}
+          {loading ? <ButtonSpinner label="Đang xác thực..." /> : 'Xác nhận'}
         </button>
 
         <div className="inline-actions">
           <button className="text-button text-button-left" type="button" onClick={onBack}>
-            Quay láº¡i
+            Quay lại
           </button>
           <button className="text-button text-button-right" type="button" onClick={onResend} disabled={resendLoading}>
-            {resendLoading ? <ButtonSpinner label="Đang gửi lại..." /> : 'Gá»­i láº¡i mÃ£'}
+            {resendLoading ? <ButtonSpinner label="Đang gửi lại..." /> : 'Gửi lại mã'}
           </button>
         </div>
       </form>
