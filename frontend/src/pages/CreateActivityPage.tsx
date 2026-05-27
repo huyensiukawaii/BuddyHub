@@ -3,6 +3,7 @@ import { createActivity, fetchCategories } from '../api'
 import { CreateActivityScreen } from '../components/activities/CreateActivityScreen'
 import { AppNav } from '../components/layout/AppNav'
 import { getApiErrorMessage } from '../lib/errors'
+import { isAccessTokenValid, loginPath } from '../lib/auth'
 import { navigate } from '../lib/navigation'
 import { hasValidCategory, validateCreateActivityForm } from '../lib/validateActivity'
 import type { Banner, CreateActivityForm, FieldErrors } from '../types/activity'
@@ -34,9 +35,8 @@ export default function CreateActivityPage() {
   const redirectTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) {
-      navigate('/auth/login')
+    if (!isAccessTokenValid()) {
+      navigate(loginPath)
     }
   }, [])
 
@@ -148,9 +148,9 @@ export default function CreateActivityPage() {
       <div className="auth-orb auth-orb-one" aria-hidden />
       <div className="auth-orb auth-orb-two" aria-hidden />
 
-      <div className="create-activity-frame">
-        <AppNav active="profile" />
+      <AppNav />
 
+      <div className="create-activity-frame">
         <div className="create-hero-card">
           <div className="create-hero-icon" aria-hidden>
             ＋

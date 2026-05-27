@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { getDashboard } from '../api'
+import { LoadingState } from '../components/common/LoadingState'
 import { AppNav } from '../components/layout/AppNav'
 import { getApiErrorMessage } from '../lib/errors'
 import { formatActivityTime } from '../lib/formatActivity'
+import { isAccessTokenValid, loginPath } from '../lib/auth'
 import { navigate } from '../lib/navigation'
 import type { DashboardActivity, DashboardResponse } from '../types/dashboard'
 import '../App.css'
@@ -25,9 +27,8 @@ export default function MyEventsPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) {
-      navigate('/auth/login')
+    if (!isAccessTokenValid()) {
+      navigate(loginPath)
       return
     }
 
@@ -64,11 +65,11 @@ export default function MyEventsPage() {
       <div className="auth-orb auth-orb-one" aria-hidden />
       <div className="auth-orb auth-orb-two" aria-hidden />
 
-      <div className="my-events-shell">
-        <AppNav active="profile" />
+      <AppNav active="my-events" />
 
+      <div className="my-events-shell">
         <div className="my-events-intro">
-          <h1>Sự kiện của tôi</h1>
+          <h1>Hoạt động của tôi</h1>
           <p>Các hoạt động bạn đã tạo hoặc đã tham gia trên BuddyHub.</p>
         </div>
 
@@ -90,7 +91,7 @@ export default function MyEventsPage() {
             </button>
           </div>
 
-          {loading && <div className="empty-state">Đang tải sự kiện…</div>}
+          {loading && <LoadingState className="empty-state" label="Đang tải sự kiện..." />}
 
           {error && !loading && <div className="my-events-error">{error}</div>}
 
@@ -111,7 +112,7 @@ export default function MyEventsPage() {
                     {activity.imageUrl ? (
                       <img src={activity.imageUrl} alt="" className="activity-thumb" loading="lazy" />
                     ) : (
-                      <div className={`activity-icon ${roleClass(activity.role)}`}>▣</div>
+                      <div className={`activity-icon ${roleClass(activity.role)}`}>□</div>
                     )}
                     <div className="activity-content">
                       <h4>{activity.title}</h4>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchActivity, getMe, joinActivity } from '../api'
+import { ButtonSpinner, LoadingState } from '../components/common/LoadingState'
 import { AppNav } from '../components/layout/AppNav'
 import { getApiErrorMessage } from '../lib/errors'
 import { formatActivityDateTime, formatActivityGender } from '../lib/formatActivity'
@@ -44,10 +45,6 @@ function formatTimeRange(startTime: string, endTime?: string | null) {
   const fmt = (d: string) =>
     new Date(d).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
   return endTime ? `${fmt(startTime)} - ${fmt(endTime)}` : fmt(startTime)
-}
-
-function participantInitial(name: string) {
-  return name.trim().charAt(0).toUpperCase() || '?'
 }
 
 export default function ActivityDetailPage({ activityId }: ActivityDetailPageProps) {
@@ -146,14 +143,14 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
       <div className="auth-orb auth-orb-one" aria-hidden />
       <div className="auth-orb auth-orb-two" aria-hidden />
 
-      <div className="activity-detail-frame">
-        <AppNav active={source === 'my-events' ? 'profile' : 'activities'} />
+      <AppNav active={source === 'my-events' ? 'my-events' : 'activities'} />
 
+      <div className="activity-detail-frame">
         <button type="button" className="activity-detail-back" onClick={handleBack}>
           ← Quay lại
         </button>
 
-        {loading && <div className="activity-detail-status">Đang tải chi tiết…</div>}
+        {loading && <LoadingState className="activity-detail-status" label="Đang tải chi tiết hoạt động..." />}
 
         {error && !loading && (
           <div className="activity-detail-error" role="alert">
@@ -267,8 +264,12 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
                             className="adp-participant-profile-button"
                             onClick={() => handleOpenUserProfile(p.id)}
                           >
-                            <span className="adp-participant-avatar">
-                              {participantInitial(p.name)}
+                            <span className="adp-participant-avatar" aria-hidden>
+                              {p.avatarUrl ? (
+                                <img src={p.avatarUrl} alt="" className="adp-participant-avatar-image" />
+                              ) : (
+                                p.name.trim().charAt(0).toUpperCase() || '?'
+                              )}
                             </span>
                             <span className="adp-participant-text">
                               <span className="adp-participant-name">{p.name}</span>
@@ -363,7 +364,7 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
                     onClick={handleJoin}
                     disabled={joining}
                   >
-                    {joining ? 'Đang xử lý…' : 'Tham gia'}
+                    {joining ? <ButtonSpinner label="Đang xử lý..." /> : 'Tham gia'}
                   </button>
                   {joinError && (
                     <p className="activity-detail-join-error" role="alert">

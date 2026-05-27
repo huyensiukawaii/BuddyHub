@@ -1,4 +1,5 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
+import { ButtonSpinner } from '../common/LoadingState'
 import type { Banner, FieldErrors, LoginForm } from '../../types/auth'
 import { EyeIcon, EyeOffIcon, MailIcon } from './icons'
 
@@ -77,13 +78,17 @@ export function LoginScreen({
         </label>
 
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          {loading ? <ButtonSpinner label="Đang đăng nhập..." /> : 'Đăng nhập'}
         </button>
 
-        <button className="text-button" type="button" onClick={onGoRegister}>
-          Chưa có tài khoản? Đăng ký ngay
-        </button>
+        <p className="auth-switch">
+          <span>Chưa có tài khoản? </span>
+          <button className="text-link-button" type="button" onClick={onGoRegister}>
+            Đăng ký ngay
+          </button>
+        </p>
       </form>
     </>
   )
 }
+
