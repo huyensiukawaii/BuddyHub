@@ -148,6 +148,7 @@ export class ActivitiesService {
         description: activity.description,
         status: activity.status,
         gender: activity.gender,
+        chatLink: activity.chatLink,
         host: activity.host,
         participants,
       };
@@ -279,6 +280,16 @@ export class ActivitiesService {
           const currentCount = activity._count.participants;
           if (currentCount >= activity.maxSlots) {
             throw new BadRequestException('Hoạt động đã đủ số lượng người tham gia');
+          }
+
+          if (activity.gender !== Gender.ALL) {
+            const user = await tx.user.findUnique({
+              where: { id: userId },
+              select: { gender: true },
+            });
+            if (!user || user.gender !== activity.gender) {
+              throw new BadRequestException('Bạn không đáp ứng yêu cầu giới tính của hoạt động');
+            }
           }
 
           const existing = await tx.activityParticipant.findUnique({
