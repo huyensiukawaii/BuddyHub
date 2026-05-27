@@ -3,6 +3,7 @@ import { getDashboard } from '../api'
 import { AppNav } from '../components/layout/AppNav'
 import { getApiErrorMessage } from '../lib/errors'
 import { formatActivityTime } from '../lib/formatActivity'
+import { isAccessTokenValid, registerPath } from '../lib/auth'
 import { navigate } from '../lib/navigation'
 import type { DashboardActivity, DashboardResponse } from '../types/dashboard'
 import '../App.css'
@@ -25,9 +26,8 @@ export default function MyEventsPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) {
-      navigate('/auth/login')
+    if (!isAccessTokenValid()) {
+      navigate(registerPath)
       return
     }
 

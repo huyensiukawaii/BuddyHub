@@ -1,3 +1,4 @@
+import { isAccessTokenValid, registerPath } from '../../lib/auth'
 import { navigate } from '../../lib/navigation'
 import './AppNav.css'
 
@@ -6,7 +7,7 @@ type AppNavProps = {
 }
 
 export function AppNav({ active }: AppNavProps) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+  const isLoggedIn = isAccessTokenValid()
 
   return (
     <header className="app-nav">
@@ -35,17 +36,17 @@ export function AppNav({ active }: AppNavProps) {
       </nav>
 
       <div className="app-nav-actions">
-        {token && (
+        {isLoggedIn && (
           <button type="button" className="app-nav-create" onClick={() => navigate('/activities/new')}>
             + Tạo hoạt động
           </button>
         )}
-        {token ? (
+        {isLoggedIn ? (
           <button type="button" className="app-nav-cta app-nav-cta-muted" onClick={() => navigate('/me')}>
             Tài khoản
           </button>
         ) : (
-          <button type="button" className="app-nav-cta" onClick={() => navigate('/auth/login')}>
+          <button type="button" className="app-nav-cta" onClick={() => navigate(registerPath)}>
             Đăng nhập
           </button>
         )}

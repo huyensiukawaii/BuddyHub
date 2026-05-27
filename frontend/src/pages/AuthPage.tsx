@@ -7,7 +7,6 @@ import {
   updateProfile,
   verifyOtp,
   type ProfilePayload,
-  type ProfilePayload,
 } from '../api'
 import { getApiErrorMessage } from '../lib/errors'
 import '../App.css'
@@ -16,6 +15,7 @@ import { LoginScreen } from '../components/auth/LoginScreen'
 import { ProfileScreen } from '../components/auth/ProfileScreen'
 import { RegisterScreen } from '../components/auth/RegisterScreen'
 import { VerifyScreen } from '../components/auth/VerifyScreen'
+import { homePath, isAccessTokenValid, setAccessToken } from '../lib/auth'
 import type { Banner, FieldErrors, LoginForm, RegisterForm, RegistrationSession, Screen, CompleteProfileForm } from '../types/auth'
 
 const otpLength = 6
@@ -133,6 +133,16 @@ export default function AuthPage() {
   })
 
   const otpInputRefs = useRef<Array<HTMLInputElement | null>>([])
+
+  useEffect(() => {
+    if (!isAccessTokenValid()) {
+      return
+    }
+
+    window.history.replaceState(null, '', homePath)
+    setPathname(homePath)
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }, [])
 
   useEffect(() => {
     let alive = true
@@ -269,7 +279,7 @@ export default function AuthPage() {
 
       const accessToken = data?.accessToken
       if (typeof accessToken === 'string' && accessToken.trim()) {
-        localStorage.setItem('access_token', accessToken)
+        setAccessToken(accessToken)
       }
 
       setBanner({ tone: 'success', text: 'Đăng nhập thành công. Chuyển tới trang hồ sơ…' })
@@ -542,7 +552,7 @@ export default function AuthPage() {
         throw new Error('Không nhận được accessToken từ máy chủ')
       }
 
-      localStorage.setItem('access_token', accessToken)
+      setAccessToken(accessToken)
 
       // Step 2: Update profile with additional information
       const payload: ProfilePayload = {
@@ -562,39 +572,28 @@ export default function AuthPage() {
         safeInterests = completeProfileForm.interests.filter((it) => interestOptions.includes(it))
       }
 
-      const safePayload: ProfilePayload = { name: safeName }
-      if (safeFaculty !== null) safePayload.faculty = safeFaculty
-      if (safeSchoolYear !== null) safePayload.schoolYear = safeSchoolYear
-      safePayload.bio = safeBio
-      if (safeInterests.length > 0) safePayload.interests = safeInterests
+      if (safeInterests.length > 0) {
+        payload.interests = safeInterests
+      }
 
-      // final debug log for browser console
-      // eslint-disable-next-line no-console
-      console.debug('[ProfileSubmit] safePayload:', safePayload, 'using token:', Boolean(storedToken))
+      if (!accessToken) {
 
-      // Verify token and current user before attempting profile update to avoid backend errors
-      const meData = await getMe({ token: storedToken })
-      const currentUserId = meData?.id
-      // eslint-disable-next-line no-console
-      console.debug('[ProfileSubmit] /users/me response id:', currentUserId)
 
-      if (!currentUserId) {
         throw new Error('Token không hợp lệ hoặc server không trả về thông tin người dùng. Vui lòng đăng nhập lại.')
       }
 
       await updateProfile(payload, { token: accessToken })
 
-      localStorage.removeItem('access_token')
       setPendingRegistration(null)
       setRegisterForm(registerDefaults)
-      setLoginForm({
-        email: pendingRegistration.email,
-        password: '',
-      })
+      setLoginForm(loginDefaults)
       setOtpDigits(Array.from({ length: otpLength }, () => ''))
       setCompleteProfileForm(completeProfileDefaults)
       setBanner({ tone: 'success', text: 'Đăng ký thành công! Vui lòng đăng nhập.' })
-      setScreen('login')
+      window.history.pushState(null, '', homePath)
+      setPathname(homePath)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+      return
     } catch (error) {
       setBanner({ tone: 'error', text: getApiErrorMessage(error, 'Hoàn tất đăng ký thất bại') })
     } finally {
