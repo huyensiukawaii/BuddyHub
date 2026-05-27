@@ -109,6 +109,11 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
   const hostDisplayName = activity ? (activity.host?.name ?? 'BuddyHub member') : ''
   const currentUserId = getCurrentUserId()
   const isHost = currentUserId !== null && activity?.host?.id === currentUserId
+  const spotsLeft = activity ? activity.maxSlots - activity.currentParticipants : 0
+  const fillPercent =
+    activity && activity.maxSlots > 0
+      ? Math.min(100, Math.round((activity.currentParticipants / activity.maxSlots) * 100))
+      : 0
   const alreadyJoined =
     !isHost &&
     currentUserId !== null &&
@@ -130,12 +135,6 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
     spotsLeft > 0 &&
     (activity?.deadline == null || new Date() <= new Date(activity.deadline))
   const resolvedChatLink = chatLink ?? (alreadyJoined ? (activity?.chatLink ?? null) : null)
-
-  const spotsLeft = activity ? activity.maxSlots - activity.currentParticipants : 0
-  const fillPercent =
-    activity && activity.maxSlots > 0
-      ? Math.min(100, Math.round((activity.currentParticipants / activity.maxSlots) * 100))
-      : 0
 
   return (
     <div className="activity-detail-page">
@@ -163,6 +162,10 @@ export default function ActivityDetailPage({ activityId }: ActivityDetailPagePro
             <article className="activity-detail-main myprofile-card">
               {/* Hero */}
               <div className="activity-detail-hero">
+                {activity.imageUrl && (
+                  <img src={activity.imageUrl} alt="" className="activity-detail-image" />
+                )}
+
                 <span
                   className="activity-detail-category"
                   style={{ background: categoryStyle.bg, color: categoryStyle.color }}
