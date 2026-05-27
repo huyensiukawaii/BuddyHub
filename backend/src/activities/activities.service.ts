@@ -243,68 +243,80 @@ export class ActivitiesService {
 
   async join(activityId: string, userId: string) {
     try {
-      const activity = await this.prisma.activity.findUnique({
-        where: { id: activityId },
-        include: {
-          _count: {
-            select: {
-              participants: { where: { status: ParticipantStatus.JOINED } },
-            },
-          },
-        },
-      });
+      let chatLink: string | null = null;
 
-      if (!activity) {
-        throw new NotFoundException('Không tìm thấy hoạt động');
-      }
-
-      const now = new Date();
-      if (now > activity.deadline) {
-        throw this.error();
-      }
-
-      if (
-        activity.status === ActivityStatus.FULL ||
-        activity.status === ActivityStatus.CLOSED ||
-        activity.status === ActivityStatus.CANCELLED ||
-        activity.status === ActivityStatus.FINISHED
-      ) {
-        throw this.error();
-      }
-
-      const currentCount = activity._count.participants;
-      if (currentCount >= activity.maxSlots) {
-        throw this.error();
-      }
-
-      const existing = await this.prisma.activityParticipant.findUnique({
-        where: { activityId_userId: { activityId, userId } },
-      });
-
-      if (existing && existing.status === ParticipantStatus.JOINED) {
-        throw this.error();
-      }
-
-      await this.prisma.$transaction(async (tx) => {
-        await tx.activityParticipant.upsert({
-          where: { activityId_userId: { activityId, userId } },
-          create: { activityId, userId, status: ParticipantStatus.JOINED },
-          update: {
-            status: ParticipantStatus.JOINED,
-            joinedAt: now,
-            cancelledAt: null,
-          },
-        });
-
-        if (currentCount + 1 >= activity.maxSlots) {
-          await tx.activity.update({
+      await this.prisma.$transaction(
+        async (tx) => {
+          const activity = await tx.activity.findUnique({
             where: { id: activityId },
-            data: { status: ActivityStatus.FULL },
+            include: {
+              _count: {
+                select: {
+                  participants: { where: { status: ParticipantStatus.JOINED } },
+                },
+              },
+            },
           });
-        }
-      });
 
-      return { message: 'OK', chatLink: activity.chatLink };
+          if (!activity) {
+            throw new NotFoundException('Không tìm thấy hoạt động');
+          }
+
+          const now = new Date();
+          if (now > activity.deadline) {
+            throw new BadRequestException('Hoạt động đã hết hạn đăng ký');
+          }
+
+          if (
+            activity.status === ActivityStatus.FULL ||
+            activity.status === ActivityStatus.CLOSED ||
+            activity.status === ActivityStatus.CANCELLED ||
+            activity.status === ActivityStatus.FINISHED
+          ) {
+            throw new BadRequestException('Hoạt động không còn nhận người tham gia');
+          }
+
+          const currentCount = activity._count.participants;
+          if (currentCount >= activity.maxSlots) {
+            throw new BadRequestException('Hoạt động đã đủ số lượng người tham gia');
+          }
+
+          const existing = await tx.activityParticipant.findUnique({
+            where: { activityId_userId: { activityId, userId } },
+          });
+
+          if (existing && existing.status === ParticipantStatus.JOINED) {
+            throw new BadRequestException('Bạn đã tham gia hoạt động này rồi');
+          }
+
+          await tx.activityParticipant.upsert({
+            where: { activityId_userId: { activityId, userId } },
+            create: {
+              activityId,
+              userId,
+              status: ParticipantStatus.JOINED,
+              joinedAt: now,
+            },
+            update: {
+              status: ParticipantStatus.JOINED,
+              joinedAt: now,
+              cancelledAt: null,
+            },
+          });
+
+          if (currentCount + 1 >= activity.maxSlots) {
+            await tx.activity.update({
+              where: { id: activityId },
+              data: { status: ActivityStatus.FULL },
+            });
+          }
+
+          chatLink = activity.chatLink;
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+
+      return { message: 'OK', chatLink };
     } catch (error) {
       if (
         error instanceof BadRequestException ||
